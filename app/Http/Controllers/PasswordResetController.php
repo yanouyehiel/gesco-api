@@ -19,15 +19,10 @@ class PasswordResetController extends Controller
 
     public function sendResetLinkEmail(LinkEmailRequest $request)
     {
-        //$url = URL::temporarySignedRoute('password.reset', now()->addMinute(30), ['email' => $request->email]);
-        
-        //$url = str_replace(env('APP_URL'), env('FRONTEND_URL'), $url);
-
         $expires = now()->addMinutes(30)->getTimestamp();
         $signature = hash_hmac('sha256', $request->email . '|' . $expires, config('app.key'));
 
-        //$url = url('/auth/password/reset/' . $request->email . '/' . $expires . '/' . $signature);
-        $url = "https://gesco-web.vercel.app/#/auth/password/reset/" . $request->email . '/' . $expires . '/' . $signature;
+        $url = "https://gesco-app.app/#/auth/password/reset/" . $request->email . '/' . $expires . '/' . $signature;
 
         Mail::to($request->email)->send(new ResetPasswordLink($url));
 

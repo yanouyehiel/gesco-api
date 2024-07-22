@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EmailVerification;
+use App\Mail\EmailVerificationSuccess;
 use App\Models\User;
 use Illuminate\Support\Str;
 
@@ -29,6 +30,8 @@ class VerifyEmailController extends Controller
                 'remember_token' => Str::random(10)
             ])->save();
         }
+
+        Mail::to($user[0])->send(new EmailVerificationSuccess());
 
         return response()->json([
             'message' => 'Email vérifié'

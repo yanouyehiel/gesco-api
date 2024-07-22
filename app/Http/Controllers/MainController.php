@@ -278,22 +278,30 @@ class MainController extends Controller
 
     public function addTarif(Request $req)
     {
-        $tarif = new Tarif();
+        $exist = Tarif::where('type_classe_id', (int) $req->type_classe_id)->get();
 
-        $tarif->type_classe_id = (int) $req->type_classe_id;
-        $tarif->inscription = (int) $req->inscription;
-        $tarif->premiere_tranche = (int) $req->premiere_tranche;
-        $tarif->deuxieme_tranche = (int) $req->deuxieme_tranche;
-        $tarif->troisieme_tranche = (int) $req->troisieme_tranche;
-        $tarif->ecole_id = (int) $req->ecole_id;
-        $tarif->created_at = now();
-        $tarif->updated_at = now();
-        $tarif->save();
+        if (count($exist) > 0) {
+            return response()->json([
+                'message' => 'Le tarif de cette classe existe déjà'
+            ], 500);
+        } else {
+            $tarif = new Tarif();
+            $tarif->type_classe_id = (int) $req->type_classe_id;
+            $tarif->inscription = (int) $req->inscription;
+            $tarif->premiere_tranche = (int) $req->premiere_tranche;
+            $tarif->deuxieme_tranche = (int) $req->deuxieme_tranche;
+            $tarif->troisieme_tranche = (int) $req->troisieme_tranche;
+            $tarif->ecole_id = (int) $req->ecole_id;
+            $tarif->created_at = now();
+            $tarif->updated_at = now();
+            $tarif->save();
 
-        return response([
-            'message' => 'Tarif enregistré avec succès !',
-            'data' => $tarif
-        ]);
+            return response([
+                'message' => 'Tarif enregistré avec succès !',
+                'data' => $tarif
+            ]);
+        }
+        
     }
 
     public function resumeFinanceStudent($student_id)
