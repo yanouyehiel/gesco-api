@@ -168,7 +168,7 @@ class MainController extends Controller
         $ecole->email = $req->email;
         $ecole->site_web = $req->site_web;
         $ecole->type_etablissement_id = (int) $req->type_etablissement_id;
-        $ecole->bloque = 0;
+        $ecole->bloque = 1;
         $ecole->matricule = Str::random(9);
         $ecole->created_at = now();
         $ecole->updated_at = now();
@@ -285,21 +285,32 @@ class MainController extends Controller
                 'message' => 'Le tarif de cette classe existe déjà'
             ], 500);
         } else {
-            $tarif = new Tarif();
-            $tarif->type_classe_id = (int) $req->type_classe_id;
-            $tarif->inscription = (int) $req->inscription;
-            $tarif->premiere_tranche = (int) $req->premiere_tranche;
-            $tarif->deuxieme_tranche = (int) $req->deuxieme_tranche;
-            $tarif->troisieme_tranche = (int) $req->troisieme_tranche;
-            $tarif->ecole_id = (int) $req->ecole_id;
-            $tarif->created_at = now();
-            $tarif->updated_at = now();
-            $tarif->save();
+            $classes = Classe::where('type_classe_id', (int) $req->type_classe_id)
+                        ->where('ecole_id', $req->ecole_id)
+                        ->get();
 
-            return response([
-                'message' => 'Tarif enregistré avec succès !',
-                'data' => $tarif
-            ]);
+            if (count($classes) > 0) {
+                $tarif = new Tarif();
+                $tarif->type_classe_id = (int) $req->type_classe_id;
+                $tarif->inscription = (int) $req->inscription;
+                $tarif->premiere_tranche = (int) $req->premiere_tranche;
+                $tarif->deuxieme_tranche = (int) $req->deuxieme_tranche;
+                $tarif->troisieme_tranche = (int) $req->troisieme_tranche;
+                $tarif->ecole_id = (int) $req->ecole_id;
+                $tarif->created_at = now();
+                $tarif->updated_at = now();
+                $tarif->save();
+
+                return response([
+                    'message' => 'Tarif enregistré avec succès !',
+                    'data' => $tarif
+                ]);
+            } else {
+                $typeClasse = TypeClasse::where('id', (int) $req->type_classe_id)->get();
+                return response()->json([
+                    'message' => "Veuillez d'abord créer la classe ".$typeClasse[0]->classe
+                ], 500);
+            }
         }
         
     }
@@ -591,9 +602,14 @@ class MainController extends Controller
             $event->start = $req->start;
             $event->end = $req->end;
             $event->update();
+            
+            return response()->json('Evènement modifié avec succès !', 200);
+        } else {
+            return response()->json([
+                'message' => "L'évènement n'existe pas."
+            ], 200);
         }
 
-        return response()->json('Evènement modifié avec succès !', 200);
     }
 
     public function getEvents($ecole)
@@ -608,7 +624,7 @@ class MainController extends Controller
     public function addEvent(Request $req)
     {
         $event = new Event();
-        $event->title = $req->intitule;
+        $event->title = $req->title;
         $event->description = $req->description;
         $event->start = $req->start;
         $event->end = $req->end;
@@ -628,6 +644,7 @@ class MainController extends Controller
         $calendar->titre = $req->titre;
         $calendar->date = $req->date;
         $calendar->ecole_id = (int) $req->ecole_id;
+        $calendar->annee_scolaire = "2024-2025";
         $calendar->created_at = now();
         $calendar->updated_at = now();
         $calendar->save();

@@ -1,6 +1,6 @@
 <x-mail::message>
 # Email Verification
-
+Votre compte a été créé.
 Veuillez cliquer s'il vous plait sur le bouton ci-desosus pour vérifier votre adresse email
 
 <x-mail::button :url="$url">

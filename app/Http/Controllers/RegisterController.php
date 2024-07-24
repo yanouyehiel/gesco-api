@@ -41,13 +41,9 @@ class RegisterController extends Controller
         $user->updated_at = now();
         $user->save();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         Mail::to($user)->send(new EmailVerification($user));
 
         return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
             'message' => "Profil créé ! Un email a été envoyé à l'utilisateur pour confirmer son compte"
         ], 200);
     }

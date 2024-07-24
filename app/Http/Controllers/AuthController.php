@@ -66,4 +66,55 @@ class AuthController extends Controller
         $users = User::all();
         return response()->json($users, 200);
     }
+
+    public function addPersonneFromMobile(Request $request) {
+        $request->validate([
+            'nom' => 'required',
+            'prenom' => 'required',
+            'email' => 'required|email|string|unique:users',
+            'password' => 'required|string|min:8',
+            'telephone' => 'required'
+        ]);
+
+        $matricule = strtoupper(Str::random(9));
+        $ecole = Ecole::where('matricule', (int) $request->matricule)->get();
+
+        if (count($ecole) > 0) {
+            $user = new User();
+            $user->nom = $request->nom;
+            $user->prenom = $request->prenom;
+            $user->email = $request->email;
+            $user->telephone = $request->telephone;
+            $user->password = Hash::make($request->password);
+            $user->matricule = $matricule;
+            $user->ecole_id = (int) $ecole[0]->id;
+            $user->role_id = (int) $request->role_id;
+            $user->remember_token = Str::random(10); 
+            $user->created_at = now();
+            $user->updated_at = now();
+            $user->save();
+
+            Mail::to($user)->send(new EmailVerification($user));
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+    
+            // Récupérer le dernier token créé pour l'utilisateur
+            $lastToken = $user->tokens()->latest()->first();
+            $tokenId = $lastToken->id;
+            
+            return response()->json([
+                'access_token' => $token,
+                'message' => "Nouveau profil créé avec succès !",
+                'token_type' => 'Bearer',
+                'token_id' => $tokenId,
+                'user' => $user,
+                'ecole' => $user->ecole
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => "L'école avec ce matricule n'existe pas."
+            ], 500);
+        }
+        
+    }
 }

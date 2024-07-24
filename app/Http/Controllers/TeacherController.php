@@ -191,14 +191,13 @@ class  TeacherController extends Controller
 
     public function updateNoteStudent(Request $request)
     {
-        $note = new Note();
-        $note->student_id = $request->student_id;
+        $note = Note::findOrFail($request->id);
         $note->note = $request->note;
-        $note->matiere_id = $request->matiere_id;
-        $note->user_id = auth()->user()->id;
-        $note->save();
+        $note->update();
 
-        return response($note, Response::HTTP_CREATED);
+        return response()->json([
+            'message' => 'Note modifiée avec succès.'
+        ], 200);
     }
 
     public function addNoteStudent(Request $request)
@@ -302,8 +301,8 @@ class  TeacherController extends Controller
 
         $devoir = new Devoir();
         $devoir->livre_id = (int) $request->livre_id;
-        $devoir->num_page = (int) $request->num_page;
-        $devoir->num_exo = (int) $request->num_exo;
+        $devoir->num_page = $request->num_page;
+        $devoir->num_exo = $request->num_exo;
         $devoir->classe_id = (int) $request->classe_id;
         $devoir->ecole_id = (int) $request->ecole_id;
         $devoir->matiere_id = (int) $request->matiere_id;

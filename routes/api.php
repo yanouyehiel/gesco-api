@@ -108,7 +108,7 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::put('/update-event', [MainController::class, 'updateEvent']);
     Route::put('/validate-request', [MainController::class, 'validateRequest']); //Valider une requete de document
     Route::put('/update-employe', [MainController::class, 'updateEmploye']);
-    Route::put('/update-note', [TeacherController::class, 'updateNote']); //Modifier la note sur mobile
+    Route::put('/update-note', [TeacherController::class, 'updateNoteStudent']); //Modifier la note sur mobile
     
     //Delete Routes
     Route::delete('/delete-classe/{id}', [MainController::class, 'deleteClasse']); //Supprimer une classe
@@ -123,13 +123,17 @@ Route::middleware([AddCustomHeaders::class])->group(function () {
     Route::get('/get-all-school', [MainController::class, 'getEcoles']);
     Route::get('/users', [AuthController::class, 'allUsers']);
 
-    //Post Routes
-    Route::post('/auth/login', LoginController::class); //Se connecter
+    //Post Routes  
     Route::post('/auth/register', RegisterController::class); //Inscription
     Route::post('/register', [AuthController::class, 'addPersonne']); //Inscription
+    Route::post('/register-mobile', [AuthController::class, 'addPersonneFromMobile']); //Inscription
+    Route::post('/add-ecole', [MainController::class, 'addEcole']); //AJouter une ecole
+});
+
+Route::middleware([AddCustomHeaders::class, CheckEcole::class])->group(function () {
+    Route::post('/auth/login', LoginController::class); //Se connecter
     Route::post('/auth/password/email', [PasswordResetController::class, 'sendResetLinkEmail'])->name('password.send');
     Route::post('/auth/password/reset/{email}/{expires}/{signature}', [PasswordResetController::class, 'reset'])->name('password.reset');
     Route::post('/auth/email/verify/send', [VerifyEmailController::class, 'sendMail']);
     Route::post('/auth/email/verify/{email}/{expires}/{signature}', [VerifyEmailController::class, 'verify'])->name('verify-email');
-    Route::post('/add-ecole', [MainController::class, 'addEcole']); //AJouter une ecole
 });

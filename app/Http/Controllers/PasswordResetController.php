@@ -22,12 +22,12 @@ class PasswordResetController extends Controller
         $expires = now()->addMinutes(30)->getTimestamp();
         $signature = hash_hmac('sha256', $request->email . '|' . $expires, config('app.key'));
 
-        $url = "https://gesco-app.app/#/auth/password/reset/" . $request->email . '/' . $expires . '/' . $signature;
+        $url = "https://gesco-app.com/#/auth/password/reset/" . $request->email . '/' . $expires . '/' . $signature;
 
         Mail::to($request->email)->send(new ResetPasswordLink($url));
 
         return response()->json([
-            'message' => 'Le lien pour regénérer un nouveau mot de passe a été envoyé'
+            'message' => 'Le lien pour regénérer un nouveau mot de passe a été envoyé par mail'
         ]);
     }
 

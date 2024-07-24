@@ -25,7 +25,6 @@ class EmailVerification extends Mailable
         $expires = now()->addMinutes(30)->getTimestamp();
         $signature = hash_hmac('sha256', $user->email . '|' . $expires, config('app.key'));
 
-        //$this->url = url('/auth/email/verify/' . $user->email . '/' . $expires . '/' . $signature);
         $this->url = "https://gesco-app.com/#/auth/email/verify/" . $user->email . '/' . $expires . '/' . $signature;
     }
 
