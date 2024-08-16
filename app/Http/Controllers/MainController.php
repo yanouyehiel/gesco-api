@@ -16,10 +16,15 @@ use App\Models\Student;
 use App\Models\Paiement;
 use App\Models\Notification;
 use App\Models\Message;
+use App\Models\CoefficientMatiere;
+use App\Models\GroupeMatiere;
 use App\Models\Event;
 use App\Models\Livre;
+use App\Models\Note;
 use App\Models\Calendar;
 use App\Models\TrancheHoraire;
+use App\Models\Trimestre;
+use App\Models\Sequence; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -41,6 +46,12 @@ class MainController extends Controller
         return response()->json($role, 200);
     }
 
+    public function getCycles(int $ecole_id)
+    {
+        $cycles = Cycle::all();
+        return response()->json($cycles, 200);
+    }
+
     public function getTypesClasse()
     {
         $types = TypeClasse::all();
@@ -54,8 +65,28 @@ class MainController extends Controller
 
     public function getMatieres(int $ecole_id)
     {
-        $matieres = Matiere::where('ecole_id', $ecole_id)->get();
+        $matieres = DB::table('matieres')
+            ->join('groupe_matieres', 'matieres.groupe_matiere_id', '=', 'groupe_matieres.id')
+            ->select("matieres.*", 'groupe_matieres.intitule as nom_groupe')
+            ->where('matieres.ecole_id', $ecole_id)
+            ->get();
+        
         return response()->json($matieres, 200);
+    }
+
+    public function getSingleMatiere(int $id)
+    {
+        $matiere = Matiere::find($id);
+        $coefficients = DB::table('coefficient_matieres')
+            ->join('classes', 'coefficient_matieres.classe_id', '=', 'classes.id')
+            ->select('coefficient_matieres.*', 'classes.nom as nom_classe')
+            ->where('coefficient_matieres.matiere_id', $matiere->id)
+            ->get();
+
+        return response()->json([
+            'matiere' => $matiere,
+            'coefficients' => $coefficients
+        ], 200);
     }
 
     public function addClasse(Request $req)
@@ -66,6 +97,7 @@ class MainController extends Controller
         $classe->type_classe_id = (int) $req->type_classe_id;
         $classe->effectif = 0;
         $classe->teacher_id = isset($req->teacher_id) ? $req->teacher_id : null;
+        $classe->cycle_id = isset($req->cycle_id) ? $req->cycle_id : null;
         $classe->created_at = now();
         $classe->updated_at = now();
         $classe->save();
@@ -88,8 +120,7 @@ class MainController extends Controller
     {
         $classes = DB::table('classes')
             ->join('users', 'classes.teacher_id', '=', 'users.id')
-            ->join('ecoles', 'classes.ecole_id', '=', 'ecoles.id')
-            ->select('classes.*', 'users.nom as nom_teacher', 'users.prenom as prenom_teacher', 'ecoles.nom as nom_ecole')
+            ->select('classes.*', 'users.nom as nom_teacher', 'users.prenom as prenom_teacher')
             ->where('classes.ecole_id', $ecole_id)
             ->get();
 
@@ -162,6 +193,7 @@ class MainController extends Controller
         $ecole = new Ecole();
 
         $ecole->nom = $req->nom;
+        $ecole->pays = $req->pays;
         $ecole->localisation = $req->localisation;
         $ecole->ville = $req->ville;
         $ecole->telephone = $req->telephone;
@@ -195,14 +227,40 @@ class MainController extends Controller
         $matiere->code = $req->code;
         $matiere->intitule = $req->intitule;
         $matiere->ecole_id = (int) $req->ecole_id;
-        //$matiere->classe_id = (int) $req->classe_id;
-        //$matiere->coefficient = (int) $req->coefficient;
+        $matiere->groupe_matiere_id = (int) $req->groupe_matiere_id;
         $matiere->save();
 
+        foreach ($req->coefficients as $key => $coeff) {
+            $coefficent = new CoefficientMatiere();
+            $coefficent->classe_id = (int) $coeff['classe_id'];
+            $coefficent->coefficient = (int) $coeff['coefficient'];
+            $coefficent->matiere_id = (int) $matiere->id;
+            $coefficent->save();
+        }
+
         return response()->json([
-            'message' => "Matière créée avec succès !",
+            'message' => "Matière et coefficient enregistés avec succès !",
             'data' => $matiere
         ], 200);
+    }
+
+    public function addGroupeMatiere(Request $req)
+    {
+        $groupe = new GroupeMatiere();
+        $groupe->intitule = $req->intitule;
+        $groupe->ecole_id = $req->ecole_id;
+        $groupe->save();
+
+        return response()->json([
+            'message' => 'Groupe enregistré !',
+            'data' => $groupe
+        ], 200);
+    }
+
+    public function getGroupesMatiere(int $ecole_id)
+    {
+        $groupes = GroupeMatiere::where('ecole_id', $ecole_id)->get();
+        return response()->json($groupes, 200);
     }
 
     public function getStudents($ecole_id)
@@ -286,8 +344,8 @@ class MainController extends Controller
             ], 500);
         } else {
             $classes = Classe::where('type_classe_id', (int) $req->type_classe_id)
-                        ->where('ecole_id', $req->ecole_id)
-                        ->get();
+                ->where('ecole_id', $req->ecole_id)
+                ->get();
 
             if (count($classes) > 0) {
                 $tarif = new Tarif();
@@ -388,6 +446,14 @@ class MainController extends Controller
             //->select('tarifs.*', 'classes.nom as nom_classe')
             ->where('paiements.ecole_id', $ecole_id)
             ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json($paiements, 200);
+    }
+
+    public function getPaiementsChart($ecole_id)
+    {
+        $paiements = Paiement::where('ecole_id', (int) $ecole_id)
             ->get();
 
         return response()->json($paiements, 200);
@@ -790,6 +856,124 @@ class MainController extends Controller
         
         return response()->json([
             'message' => "Liaison enregistrée avec succès !"
+        ], 200);
+    }
+
+    public function addTrimestre(Request $req)
+    {
+        $trimestre = new Trimestre();
+        $trimestre->intitule = $req->intitule;
+        $trimestre->ecole_id = (int) $req->ecole_id;
+        $trimestre->save();
+
+        return response()->json([
+            'message' => "Intitulé enregistré avec succès !"
+        ], 200);
+    }
+
+    public function getTrimestres($ecole_id)
+    {
+        $trimestres = Trimestre::where('ecole_id', (int) $ecole_id)->get();
+        return response()->json($trimestres, 200);
+    }
+
+    public function addSequence(Request $req)
+    {
+        $sequence = new Sequence();
+        $sequence->intitule = $req->intitule;
+        $sequence->trimestre_id = (int) $req->trimestre_id;
+        $sequence->ecole_id = (int) $req->ecole_id;
+        $sequence->save();
+
+        return response()->json([
+            'message' => "Intitulé enregistré avec succès !"
+        ], 200);
+    }
+
+    public function getSequences($ecole_id)
+    {
+        $sequences = DB::table('sequences')
+            ->join('trimestres', 'sequences.trimestre_id', '=', 'trimestres.id')
+            ->select('sequences.*', 'trimestres.intitule as intitule_trimestre')
+            ->where('sequences.ecole_id', (int) $ecole_id)
+            ->get();
+
+        return response()->json($sequences, 200);
+    }
+
+    public function generateBulletinClasse($classe_id, $annee, $sequence_id)
+    {
+        $global_notes = [];  
+        $students = Student::where('classe_id', (int) $classe_id)->get();
+        $total_students = count($students);
+
+        //Recuperation de toutes les notes de la classe
+        $notes = Note::where('annee_scolaire', trim($annee))
+        ->where('notes.classe_id', (int) $classe_id)
+        ->where('notes.sequence_id', (int) $sequence_id)
+        ->get();
+        $total_notes = count($notes);
+
+        //Tri sur les notes de la classe
+        $array_casted = $notes->all();
+        usort($array_casted, function($a, $b) {
+            return $b->note <=> $a->note; // Tri décroissant
+        });
+
+        foreach ($students as $key => $student) {
+            $notes = DB::table('notes')
+            ->join('matieres', 'notes.matiere_id', '=', 'matieres.id')
+            ->join('groupe_matieres', 'matieres.groupe_matiere_id', '=', 'groupe_matieres.id')
+            ->join('coefficient_matieres', 'notes.matiere_id', '=', 'coefficient_matieres.matiere_id')
+            ->select('notes.*', 'groupe_matieres.intitule as intitule_groupe', 'matieres.intitule as nom_matiere', 'coefficient_matieres.coefficient as coeff_matiere')
+            ->where('notes.annee_scolaire', $annee)
+            ->where('notes.sequence_id', (int) $sequence_id)
+            ->where('notes.student_id', $student->id)
+            ->get();
+
+            array_push($global_notes, [
+                "student" => $student,
+                "notes" => $notes
+            ]);
+        }
+
+        $sequence = Sequence::find((int) $sequence_id);
+        $classe = Classe::find((int) $classe_id);
+        $coefficients = CoefficientMatiere::where('classe_id', (int) $classe_id)->get();
+        $ecole = Ecole::find((int) $classe->ecole_id);
+
+        return response()->json([
+            'notes' => $global_notes,
+            //'notes_triees' => $array_casted,
+            'total_notes' => $total_notes,
+            'sequence' => $sequence,
+            'trimestre' => $sequence->trimestre,
+            'annee_scolaire' => $annee,
+            'classe' => $classe,
+            'class_mater' => $classe->teacher_principal->nom.' '.$classe->teacher_principal->prenom,
+            'cycle' => $classe->cycle,
+            'coefficients' => $coefficients,
+            'total_students_classe' => $total_students,
+            'ecole' => $ecole,
+        ], 200);
+    }
+
+    public function generateBulletinStudent($student_id, $annee, $sequence_id)
+    {
+        $notes = DB::table('notes')
+        ->join('matieres', 'notes.matiere_id', '=', 'matieres.id')
+        ->join('groupe_matieres', 'matieres.groupe_matiere_id', '=', 'groupe_matieres.id')
+        ->select('notes.*', 'matieres.intitule as intitule_matiere', 'matieres.code as code_matiere', 'groupe_matieres.intitule as intitule_groupe_matiere')
+        ->where('notes.annee_scolaire', $annee)
+        ->where('notes.student_id', (int) $student_id)
+        ->where('notes.sequence_id', (int) $sequence_id)->get();
+
+        $sequence = Sequence::find((int) $sequence_id);
+
+        return response()->json([
+            'notes' => $notes,
+            'sequence' => $sequence,
+            'trimestre' => $sequence->trimestre
         ], 200);
     }
 }

@@ -18,7 +18,6 @@ class CreateMatieresTable extends Migration
             $table->string('intitule');
             $table->string('code');
             $table->foreignId('ecole_id')->constrained('ecoles')->onDelete('cascade');
-            //$table->integer('coefficient')->default(1);
             $table->timestamps();
         });
     }

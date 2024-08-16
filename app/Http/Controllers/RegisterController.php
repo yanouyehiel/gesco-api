@@ -41,7 +41,7 @@ class RegisterController extends Controller
         $user->updated_at = now();
         $user->save();
 
-        Mail::to($user)->send(new EmailVerification($user));
+        Mail::to($user->email)->send(new EmailVerification($user));
 
         return response()->json([
             'message' => "Profil créé ! Un email a été envoyé à l'utilisateur pour confirmer son compte"

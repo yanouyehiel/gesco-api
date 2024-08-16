@@ -57,6 +57,8 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::get('/profile-employe/{id}', [MainController::class, 'profileEmploye']); //Information sur un employe
     Route::get('/get-ecole/{id}', [MainController::class, 'getInfoEcole']); //Information sur une ecole
     Route::get('/get-matieres/{id}', [MainController::class, 'getMatieres']); //Liste de toutes les matières d'une école
+    Route::get('/get-matiere/{id}', [MainController::class, 'getSingleMatiere']);
+    //Route::get('/get-coefficients-matiere/{id}', [MainController::class, 'getCoefficientsMatieres']);
     Route::get('/get-students/{id}', [MainController::class, 'getStudents']); //Lister les élèves d'une école
     Route::get('/get-all-students/{id}', [MainController::class, 'getAllStudents']);
     Route::get('/get-student/{id}', [MainController::class, 'getStudent']); //Information sur un élève
@@ -64,6 +66,7 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::get('/get-parent/{id}', [MainController::class, 'getParent']);
     Route::get('/get-tarifs/{id}', [MainController::class, 'getTarifs']); //Lister le coût des pensions de toutes les classes d'un établissement
     Route::get('/get-paiements/{id}', [MainController::class, 'getPaiements']); //Lister tous les paiements de pension
+    Route::get('/get-paiements-chart/{id}', [MainController::class, 'getPaiementsChart']);
     Route::get('/get-fees-student/{student}', [MainController::class, 'getFeesStudent']); //Lister tous les paiements d'un eleve
     Route::get('/get-somme-paye/{id}', [MainController::class, 'getSommePaye']); //Pensin payé par un étudiant
     Route::get('/get-documents-asked/{id}', [MainController::class, 'getDocumentsAsked']);
@@ -77,7 +80,15 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::get('/get-fees-ecole/{id}', [MainController::class, 'getFeesEcole']);
     Route::get('/get-tokens', [MainController::class, 'getTokens']);
     Route::get('/get-school/{id}', [MainController::class, 'getSchool']);
+    Route::get('/get-groupes-matiere/{id}', [MainController::class, 'getGroupesMatiere']);
+    Route::get('/get-cycles/{id}', [MainController::class, 'getCycles']);
+    Route::get('/get-trimestres/{id}', [MainController::class, 'getTrimestres']);
+    Route::get('/get-sequences/{id}', [MainController::class, 'getSequences']);
+    Route::get('/generate-bulletin-classe/classe_id={id}&annee_scolaire={annee}&sequence_id={sequence}', [MainController::class, 'generateBulletinClasse']);
+    Route::get('/generate-bulletin-student/student_id={id}&annee_scolaire={annee}&sequence_id={sequence}', [MainController::class, 'generateBulletinStudent']);
 
+
+    Route::post('/add-groupe-matiere', [MainController::class, 'addGroupeMatiere']);
     Route::post('/add-matiere', [MainController::class, 'addMatiere']); //Ajouter une matière
     Route::post('/add-note', [TeacherController::class, 'addNoteStudent']); //Ajouter une note
     Route::post('/add-absence', [TeacherController::class, 'addAbsenceStudent']); //Ajouter une absence
@@ -98,6 +109,9 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::post('/auth/logout', LogoutController::class); //Déconnexion
     Route::post('/import-list-students', [ImportController::class, 'importListStudents']); //Importer la liste des élèves
     Route::post('/link-student-parent', [MainController::class, 'linkStudentToParent']);
+    Route::post('/add-trimestre', [MainController::class, 'addTrimestre']);
+    Route::post('/add-sequence', [MainController::class, 'addSequence']);
+
 
     //Update Routes
     Route::put('/update-calendar', [MainController::class, 'updateCalendar']); //Modifier un calendrier

@@ -9,6 +9,8 @@ use App\Models\Ecole;
 use App\Models\Student;
 use App\Models\Cours;
 use App\Models\Note;
+use App\Models\Cycle;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Classe extends Model
@@ -33,5 +35,15 @@ class Classe extends Model
     public function notes()
     {
         return $this->hasMany(Note::class);
+    }
+
+    public function cycle()
+    {
+        return $this->belongsTo(Cycle::class);
+    }
+
+    public function teacher_principal()
+    {
+        return $this->hasOne(User::class, 'id', 'teacher_id');
     }
 }

@@ -4,14 +4,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateNotesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
@@ -19,7 +17,8 @@ class CreateNotesTable extends Migration
             $table->foreignId('matiere_id')->constrained('matieres');
             $table->foreignId('student_id')->constrained('students');
             $table->foreignId('classe_id')->constrained('classes');
-            $table->integer('sequence');
+            $table->foreignId('sequence_id')->constrained('sequences');
+            $table->string('appreciation')->default(null);
             $table->foreignId('ecole_id')->constrained('ecoles');
             $table->string('annee_scolaire')->default(null);
             $table->timestamps();
@@ -28,11 +27,9 @@ class CreateNotesTable extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('notes');
     }
-}
+};
