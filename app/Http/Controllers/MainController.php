@@ -25,6 +25,8 @@ use App\Models\Calendar;
 use App\Models\TrancheHoraire;
 use App\Models\Trimestre;
 use App\Models\Sequence; 
+use App\Models\Absence; 
+use App\Models\RecapTrimestre; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -54,7 +56,7 @@ class MainController extends Controller
 
     public function getTypesClasse()
     {
-        $types = TypeClasse::all();
+        $types = TypeClasse::where('ecole_id', null)->get();
         return response()->json($types, 200);
     }
 
@@ -190,27 +192,30 @@ class MainController extends Controller
 
     public function addEcole(Request $req)
     {
+        $logoName;
         $ecole = new Ecole();
-
-        $ecole->nom = $req->nom;
-        $ecole->pays = $req->pays;
-        $ecole->localisation = $req->localisation;
-        $ecole->ville = $req->ville;
-        $ecole->telephone = $req->telephone;
-        $ecole->email = $req->email;
-        $ecole->site_web = $req->site_web;
-        $ecole->type_etablissement_id = (int) $req->type_etablissement_id;
+        $ecole->nom = $req->input('nom');
+        $ecole->pays = $req->input('pays');
+        $ecole->localisation = $req->input('localisation');
+        $ecole->ville = $req->input('ville');
+        $ecole->telephone = $req->input('telephone');
+        $ecole->email = $req->input('email');
+        $ecole->site_web = $req->input('site_web');
+        $ecole->type_etablissement_id = (int) $req->input('type_etablissement_id');
         $ecole->bloque = 1;
         $ecole->matricule = Str::random(9);
-        $ecole->created_at = now();
-        $ecole->updated_at = now();
+        $file = $req->file('logo');
+        $ext = $file->getClientOriginalExtension();
+        $logoName = time().'.'.$ext;
+        $file->move(public_path().'/uploads/logos/', $logoName);
+        $ecole->logo = asset('/uploads/logos/'.$logoName);
         $ecole->save();
 
         Mail::to($req->email)->send(new EmailEcoleRegistred($ecole));
 
         return response()->json([
             'message' => 'Ecole créée avec succès !',
-            'data' => $ecole
+            'data' => $ecole,
         ]);
     }
 
@@ -421,11 +426,9 @@ class MainController extends Controller
                 $paiement->code = Str::random(10);
                 $paiement->intitule = $req->intitule;
                 $paiement->montant = (int) $req->montant;
-                $paiement->created_at = now();
-                $paiement->updated_at = now();
                 $paiement->student_id = $student_id;
                 $paiement->ecole_id = (int) $req->ecole_id;
-                $paiement->annee_scolaire = "2024-2025";
+                $paiement->annee_scolaire = $req->annee_scolaire;
                 $paiement->save();
 
                 return response([
@@ -445,7 +448,8 @@ class MainController extends Controller
             ->select('paiements.*', 'students.nom as nom_student', 'students.prenom as prenom_student')
             //->select('tarifs.*', 'classes.nom as nom_classe')
             ->where('paiements.ecole_id', $ecole_id)
-            ->orderByDesc('created_at')
+            ->where('paiements.annee_scolaire', "2024-2025")
+            ->orderByDesc('paiements.created_at')
             ->get();
 
         return response()->json($paiements, 200);
@@ -814,7 +818,7 @@ class MainController extends Controller
     {
         $students = Student::where('ecole_id', (int) $ecole)->get();
         $users = User::where('ecole_id', (int) $ecole)->get();
-        $events = Event::where('ecole_id', (int) $ecole)->get();
+        //$events = Event::where('ecole_id', (int) $ecole)->get();
         $paiements = DB::table('paiements')
             ->join('students', 'paiements.student_id', '=', 'students.id')
             ->select('students.nom as nom_student', 'students.prenom as prenom_student', 'paiements.*')
@@ -827,7 +831,8 @@ class MainController extends Controller
             'nb_teachers' => $users->where('role_id', 2)->count(),
             'nb_parents' => $users->where('role_id', 3)->count(),
             'nb_directeurs' => $users->where('role_id', 1)->count(),
-            'nb_events' => $events->count(),
+            'nb_admins' => $users->where('role_id', 4)->count(),
+            //'nb_events' => $events->count(),
             'paiements_today' => $paiements
         ]);
     }
@@ -873,7 +878,8 @@ class MainController extends Controller
 
     public function getTrimestres($ecole_id)
     {
-        $trimestres = Trimestre::where('ecole_id', (int) $ecole_id)->get();
+        //$trimestres = Trimestre::where('ecole_id', (int) $ecole_id)->get();
+        $trimestres = Trimestre::all();
         return response()->json($trimestres, 200);
     }
 
@@ -892,69 +898,115 @@ class MainController extends Controller
 
     public function getSequences($ecole_id)
     {
-        $sequences = DB::table('sequences')
+        /*$sequences = DB::table('sequences')
             ->join('trimestres', 'sequences.trimestre_id', '=', 'trimestres.id')
             ->select('sequences.*', 'trimestres.intitule as intitule_trimestre')
             ->where('sequences.ecole_id', (int) $ecole_id)
-            ->get();
+            ->get();*/
+        $sequences = Sequence::all();
 
         return response()->json($sequences, 200);
+    }
+
+    public function getIndexByStudentId($tableau, $studentId) {
+        foreach ($tableau as $index => $objet) {
+            if ($objet['student_id'] === $studentId) {
+                return $index + 1; // Retourne l'index si l'ID correspond
+            }
+        }
+        return -1; // Retourne -1 si l'objet n'est pas trouvé
     }
 
     public function generateBulletinClasse($classe_id, $annee, $sequence_id)
     {
         $global_notes = [];  
+        $notes_matiere = [];
         $students = Student::where('classe_id', (int) $classe_id)->get();
         $total_students = count($students);
 
         //Recuperation de toutes les notes de la classe
         $notes = Note::where('annee_scolaire', trim($annee))
-        ->where('notes.classe_id', (int) $classe_id)
-        ->where('notes.sequence_id', (int) $sequence_id)
+        ->where('classe_id', (int) $classe_id)
+        ->where('sequence_id', (int) $sequence_id)
         ->get();
         $total_notes = count($notes);
 
-        //Tri sur les notes de la classe
-        $array_casted = $notes->all();
-        usort($array_casted, function($a, $b) {
-            return $b->note <=> $a->note; // Tri décroissant
-        });
-
-        foreach ($students as $key => $student) {
-            $notes = DB::table('notes')
-            ->join('matieres', 'notes.matiere_id', '=', 'matieres.id')
-            ->join('groupe_matieres', 'matieres.groupe_matiere_id', '=', 'groupe_matieres.id')
-            ->join('coefficient_matieres', 'notes.matiere_id', '=', 'coefficient_matieres.matiere_id')
-            ->select('notes.*', 'groupe_matieres.intitule as intitule_groupe', 'matieres.intitule as nom_matiere', 'coefficient_matieres.coefficient as coeff_matiere')
-            ->where('notes.annee_scolaire', $annee)
-            ->where('notes.sequence_id', (int) $sequence_id)
-            ->where('notes.student_id', $student->id)
-            ->get();
-
-            array_push($global_notes, [
-                "student" => $student,
-                "notes" => $notes
-            ]);
-        }
-
+        //Informations evaluation
         $sequence = Sequence::find((int) $sequence_id);
         $classe = Classe::find((int) $classe_id);
-        $coefficients = CoefficientMatiere::where('classe_id', (int) $classe_id)->get();
         $ecole = Ecole::find((int) $classe->ecole_id);
+
+        //Total coefficients de chaque classe
+        $total_coeff = 0;
+        $coefficients = CoefficientMatiere::where('classe_id', (int) $classe_id)->get();
+        $total_coeff = $coefficients->sum('coefficient');
+
+        $total_notes_student = 0;
+        $global_moyennes = [];
+        //Recuperation de toutes les notes d'un eleve
+        foreach ($students as $key => $student) {
+            $filteredNotes = $notes->where('student_id', $student->id);
+            $absences = Absence::where('student_id', $student->id)
+                ->select('periode', 'annee_scolaire')
+                ->get();
+            foreach ($filteredNotes as $key => $note) {
+                $matiere = Matiere::find($note->matiere_id);
+                $coeff = CoefficientMatiere::where('matiere_id', $note->matiere_id)
+                    ->where('classe_id', (int) $classe_id)
+                    ->first();
+                $total_notes_student = $total_notes_student + $note->note;
+                array_push($notes_matiere, [
+                    'note' => $note,
+                    'matiere' => $matiere,
+                    'groupe_matiere' => $matiere->groupe_matiere->intitule,
+                    'coeff' => $coeff
+                ]);
+            }
+            
+            //Creation d'un tableau de moyennes de tous les eleves
+            array_push($global_moyennes, [
+                "student_id" => $student->id,
+                'moyenne' => $total_notes_student / $total_coeff,
+            ]);
+
+            //Classement des moyennes par ordre decroissant
+            usort($global_moyennes, function($a, $b) {
+                return $b['moyenne'] <=> $a['moyenne'];
+            });
+            
+            array_push($global_notes, [
+                "student" => $student,
+                "rang" => $this->getIndexByStudentId($global_moyennes, $student->id),
+                'absences' => $absences,
+                "notes" => $notes_matiere,
+                'total_notes_student' => $total_notes_student,
+                'moyenne' => $total_notes_student / $total_coeff
+            ]);
+
+            $recapTrimestre = new RecapTrimestre();
+            $recapTrimestre->sequence_1 = $total_notes_student / $total_coeff;
+            $recapTrimestre->student_id = $student->id;
+            $recapTrimestre->trimestre_id = $sequence->trimestre->id;
+            $recapTrimestre->rang = $this->getIndexByStudentId($global_moyennes, $student->id);
+            $recapTrimestre->annee_scolaire = $annee;
+            $recapTrimestre->ecole_id = $ecole->id;
+            $recapTrimestre->save();
+        }
 
         return response()->json([
             'notes' => $global_notes,
-            //'notes_triees' => $array_casted,
+            'global_moyennes' => $global_moyennes,
             'total_notes' => $total_notes,
             'sequence' => $sequence,
-            'trimestre' => $sequence->trimestre,
+            'trimestre' => $sequence->trimestre->intitule,
             'annee_scolaire' => $annee,
             'classe' => $classe,
             'class_mater' => $classe->teacher_principal->nom.' '.$classe->teacher_principal->prenom,
             'cycle' => $classe->cycle,
             'coefficients' => $coefficients,
+            'total_coefficients_classe' => $total_coeff,
             'total_students_classe' => $total_students,
-            'ecole' => $ecole,
+            //'ecole' => $ecole,
         ], 200);
     }
 

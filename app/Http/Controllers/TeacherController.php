@@ -69,7 +69,8 @@ class  TeacherController extends Controller
             ->join('matieres', 'notes.matiere_id', '=', 'matieres.id')
             ->join('students', 'notes.student_id', '=', 'students.id')
             ->join('classes', 'notes.classe_id', '=', 'classes.id')
-            ->select('notes.*', 'matieres.intitule as nom_matiere', 'students.nom as nom_student', 'students.prenom as prenom_student', 'classes.nom as nom_classe')
+            ->join('sequences', 'notes.sequence_id', '=', 'sequences.id')
+            ->select('notes.*', 'matieres.intitule as nom_matiere', 'students.nom as nom_student', 'students.prenom as prenom_student', 'classes.nom as nom_classe', 'sequences.intitule as sequence')
             ->where('notes.ecole_id', (int) $ecole_id)
             ->orderByDesc('notes.created_at')
             ->get();
@@ -84,7 +85,8 @@ class  TeacherController extends Controller
         $notes = DB::table('notes')
             ->join('matieres', 'notes.matiere_id', '=', 'matieres.id')
             ->join('students', 'notes.student_id', '=', 'students.id')
-            ->select('notes.*', 'matieres.intitule as nom_matiere', 'students.nom as nom_student', 'students.prenom as prenom_student')
+            ->join('sequences', 'notes.sequence_id', '=', 'sequences.id')
+            ->select('notes.*', 'matieres.intitule as nom_matiere', 'students.nom as nom_student', 'students.prenom as prenom_student', 'sequences.intitule as sequence')
             ->where('notes.ecole_id', (int) $classe->ecole_id)
             ->where('notes.classe_id', (int) $classe_id)
             ->orderByDesc('notes.created_at')
@@ -208,19 +210,19 @@ class  TeacherController extends Controller
             'note' => 'required',
             'classe_id' => 'required|integer',
             'sequence' => 'required|integer',
-            'ecole_id' => 'required|integer'
+            'ecole_id' => 'required|integer',
+            'appreciation' => 'required'
         ]);
 
         $note = new Note();
         $note->student_id = $request->student_id;
         $note->note = $request->note;
         $note->matiere_id = $request->matiere_id;
-        $note->sequence = $request->sequence;
+        $note->sequence_id = $request->sequence_id;
         $note->classe_id = $request->classe_id;
         $note->ecole_id = $request->ecole_id;
+        $note->appreciation = $request->appreciation;
         $note->annee_scolaire = "2024-2025";
-        $note->updated_at = now();
-        $note->created_at = now();
         $note->save();
 
         return response()->json([

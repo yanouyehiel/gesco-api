@@ -21,7 +21,8 @@ class ParentController extends Controller
         $notes = DB::table('notes')
             ->join('students', 'notes.student_id', '=', 'students.id')
             ->join('matieres', 'notes.matiere_id', '=', 'matieres.id')
-            ->select('notes.*', 'matieres.intitule as nom_matiere', 'students.nom', 'students.prenom')
+            ->join('sequences', 'notes.sequence_id', '=', 'sequences.id')
+            ->select('notes.*', 'matieres.intitule as nom_matiere', 'students.nom', 'students.prenom', 'sequences.intitule as sequence')
             ->where('notes.student_id', $student_id)
             ->orderByDesc('notes.created_at')
             ->get();

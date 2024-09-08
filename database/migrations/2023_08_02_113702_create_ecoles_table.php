@@ -23,6 +23,7 @@ class CreateEcolesTable extends Migration
             $table->string('matricule');
             $table->string('email')->nullable();
             $table->string('site_web')->nullable();
+            $table->string('logo')->nullable();
             $table->foreignId('type_etablissement_id')->constrained('type_etablissements');
             $table->integer('bloque')->default(1);
             $table->timestamps();

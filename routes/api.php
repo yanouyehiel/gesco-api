@@ -14,6 +14,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\VerifyEmailController;
+use App\Http\Controllers\UniversityController;
 use App\Http\Middleware\CheckEcole;
 use App\Http\Middleware\AddCustomHeaders;
 
@@ -86,6 +87,11 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::get('/get-sequences/{id}', [MainController::class, 'getSequences']);
     Route::get('/generate-bulletin-classe/classe_id={id}&annee_scolaire={annee}&sequence_id={sequence}', [MainController::class, 'generateBulletinClasse']);
     Route::get('/generate-bulletin-student/student_id={id}&annee_scolaire={annee}&sequence_id={sequence}', [MainController::class, 'generateBulletinStudent']);
+    Route::get('/departements/list/{id}', [UniversityController::class, 'listDepartements']);  
+    Route::get('/semestres/list', [UniversityController::class, 'listSemestres']);
+    Route::get('/cursus/list/{id}', [UniversityController::class, 'listCursus']);
+    Route::get('/filieres/list/{id}', [UniversityController::class, 'listFiliere']);
+    Route::get('/notes/list/ecole_id={ecole}&classe_id={classe}&student_id={student}&semestre_id={sequence}&matiere_id={matiere}&annee_scolaire={annee}', [UniversityController::class, 'listNote']);
 
 
     Route::post('/add-groupe-matiere', [MainController::class, 'addGroupeMatiere']);
@@ -111,6 +117,11 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::post('/link-student-parent', [MainController::class, 'linkStudentToParent']);
     Route::post('/add-trimestre', [MainController::class, 'addTrimestre']);
     Route::post('/add-sequence', [MainController::class, 'addSequence']);
+    Route::post('/departements/create', [UniversityController::class, 'createDepartement']);
+    Route::post('/cursus/create', [UniversityController::class, 'createCursus']);
+    Route::post('/filieres/add', [UniversityController::class, 'createFiliere']);
+    Route::post('/notes/add', [UniversityController::class, 'saveNote']);
+    Route::post('/type-classe/add', [UniversityController::class, 'createTypeClasse']);
 
 
     //Update Routes
