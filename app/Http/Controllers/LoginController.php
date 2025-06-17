@@ -16,7 +16,7 @@ class LoginController extends Controller
     {
         $user = User::where('email', $request->email)->first();
         
-        if (!$user || !\Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status_code' => 401,
                 'message' => 'Les identifiants envoyés sont incorrects.'

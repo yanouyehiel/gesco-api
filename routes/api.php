@@ -161,4 +161,6 @@ Route::middleware([AddCustomHeaders::class, CheckEcole::class])->group(function 
     Route::post('/auth/password/reset/{email}/{expires}/{signature}', [PasswordResetController::class, 'reset'])->name('password.reset');
     Route::post('/auth/email/verify/send', [VerifyEmailController::class, 'sendMail']);
     Route::post('/auth/email/verify/{email}/{expires}/{signature}', [VerifyEmailController::class, 'verify'])->name('verify-email');
+    Route::post('/auth/send-code-reset-password', [PasswordResetController::class, 'sendCodeResetPassword']);
+    Route::post('/auth/reset-password-with-code', [PasswordResetController::class, 'resetPasswordWithCode']);
 });
