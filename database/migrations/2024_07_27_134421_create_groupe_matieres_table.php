@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('groupe_matieres', function (Blueprint $table) {
             $table->id();
             $table->string('intitule');
+            $table->foreignId('ecole_id')->constrained('ecoles')->onDelete('cascade');
             $table->timestamps();
         });
     }

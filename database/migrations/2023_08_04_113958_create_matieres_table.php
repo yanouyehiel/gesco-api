@@ -18,6 +18,7 @@ class CreateMatieresTable extends Migration
             $table->string('intitule');
             $table->string('code');
             $table->foreignId('ecole_id')->constrained('ecoles')->onDelete('cascade');
+            $table->foreignId('groupe_matiere_id')->constrained('groupe_matieres')->onDelete('cascade');
             $table->timestamps();
         });
     }

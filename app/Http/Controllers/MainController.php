@@ -122,7 +122,9 @@ class MainController extends Controller
     {
         $classes = DB::table('classes')
             ->join('users', 'classes.teacher_id', '=', 'users.id')
+            ->join('cycles', 'classes.cycle_id', '=', 'cycles.id')
             ->select('classes.*', 'users.nom as nom_teacher', 'users.prenom as prenom_teacher')
+            ->select('cycles.*')
             ->where('classes.ecole_id', $ecole_id)
             ->get();
 
@@ -898,12 +900,12 @@ class MainController extends Controller
 
     public function getSequences($ecole_id)
     {
-        /*$sequences = DB::table('sequences')
+        $sequences = DB::table('sequences')
             ->join('trimestres', 'sequences.trimestre_id', '=', 'trimestres.id')
             ->select('sequences.*', 'trimestres.intitule as intitule_trimestre')
             ->where('sequences.ecole_id', (int) $ecole_id)
-            ->get();*/
-        $sequences = Sequence::all();
+            ->get();
+        //$sequences = Sequence::all();
 
         return response()->json($sequences, 200);
     }

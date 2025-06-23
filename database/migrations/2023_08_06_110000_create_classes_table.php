@@ -20,6 +20,7 @@ class CreateClassesTable extends Migration
             $table->foreignId('teacher_id')->constrained('users')->default(null);
             $table->integer('effectif');
             $table->foreignId('ecole_id')->constrained('ecoles');
+            $table->foreignId('cycle_id')->constrained('cycles');
             $table->timestamps();
         });
     }

@@ -16,6 +16,7 @@ class CreateTypeClassesTable extends Migration
         Schema::create('type_classes', function (Blueprint $table) {
             $table->id();
             $table->string('classe');
+            $table->foreignId('ecole_id')->constrained('ecoles')->nullable();
         });
     }
 
