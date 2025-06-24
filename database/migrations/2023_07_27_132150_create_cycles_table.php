@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('cycles', function (Blueprint $table) {
             $table->id();
             $table->string('intitule');
-            $table->foreignId('ecole_id')->constrained('ecoles')->nullable();
+            $table->foreignId('ecole_id')->nullable()->constrained('ecoles')->default(null);
             $table->timestamps();
         });
 
