@@ -23,7 +23,7 @@ class CreateStudentsTable extends Migration
             $table->string('sexe');
             $table->string('date_scolarisation');
             $table->foreignId('classe_id')->constrained('classes');
-            $table->foreignId('parent_id')->constrained('users')->nullable();
+            $table->foreignId('parent_id')->nullable()->constrained('users');
             $table->foreignId('ecole_id')->constrained('ecoles');
             $table->timestamps();
         });

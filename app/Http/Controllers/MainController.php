@@ -2,36 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Carbon\Carbon;
+use App\Models\Note;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Cycle;
 use App\Models\Ecole;
-use App\Models\Matiere;
-use App\Models\Classe;
-use App\Models\TypeClasse;
-use App\Models\Tarif;
-use App\Models\TypeEtablissement;
-use App\Models\Student;
-use App\Models\Paiement;
-use App\Models\Notification;
-use App\Models\Message;
-use App\Models\CoefficientMatiere;
-use App\Models\GroupeMatiere;
 use App\Models\Event;
 use App\Models\Livre;
-use App\Models\Note;
-use App\Models\Calendar;
-use App\Models\TrancheHoraire;
-use App\Models\Trimestre;
-use App\Models\Sequence; 
+use App\Models\Tarif;
+use App\Models\Classe;
+use App\Models\Matiere;
+use App\Models\Message;
+use App\Models\Student;
 use App\Models\Absence; 
-use App\Models\RecapTrimestre; 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Response;
+use App\Models\Calendar;
+use App\Models\Paiement;
+use App\Models\Sequence;
+use App\Models\Trimestre;
+use App\Models\TypeClasse;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
+use App\Models\Notification;
+use Illuminate\Http\Request;
+use App\Models\GroupeMatiere;
+use Illuminate\Http\Response;
+use App\Models\TrancheHoraire;
+use App\Models\RecapTrimestre; 
 use App\Mail\EmailEcoleRegistred;
+use App\Models\TypeEtablissement;
+use App\Models\CoefficientMatiere;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 
 class MainController extends Controller
@@ -54,9 +55,9 @@ class MainController extends Controller
         return response()->json($cycles, 200);
     }
 
-    public function getTypesClasse()
+    public function getTypesClasse($id)
     {
-        $types = TypeClasse::where('ecole_id', null)->get();
+        $types = TypeClasse::where('ecole_id', (int) $id)->get();
         return response()->json($types, 200);
     }
 
@@ -119,6 +120,17 @@ class MainController extends Controller
     }
 
     public function getClassesSchool($ecole_id)
+    {
+        $classes = DB::table('classes')
+            ->join('users', 'classes.teacher_id', '=', 'users.id')
+            ->select('classes.*', 'users.nom as nom_teacher', 'users.prenom as prenom_teacher')
+            ->where('classes.ecole_id', $ecole_id)
+            ->get();
+
+        return response()->json($classes, 200);
+    }
+
+    public function getClassesUniversity($ecole_id)
     {
         $classes = DB::table('classes')
             ->join('users', 'classes.teacher_id', '=', 'users.id')
@@ -194,14 +206,13 @@ class MainController extends Controller
 
     public function addEcole(Request $req)
     {
-        $logoName;
         $ecole = new Ecole();
         $ecole->nom = $req->input('nom');
         $ecole->pays = $req->input('pays');
         $ecole->localisation = $req->input('localisation');
         $ecole->ville = $req->input('ville');
         $ecole->telephone = $req->input('telephone');
-        $ecole->email = $req->input('email');
+        $ecole->email = $req->has('email') ? $req->input('email') : null;
         $ecole->site_web = $req->input('site_web');
         $ecole->type_etablissement_id = (int) $req->input('type_etablissement_id');
         $ecole->bloque = 1;
@@ -213,7 +224,9 @@ class MainController extends Controller
         $ecole->logo = asset('/uploads/logos/'.$logoName);
         $ecole->save();
 
-        Mail::to($req->email)->send(new EmailEcoleRegistred($ecole));
+        if ($req->has('email')) {
+            Mail::to($req->email)->send(new EmailEcoleRegistred($ecole));
+        }
 
         return response()->json([
             'message' => 'Ecole créée avec succès !',
@@ -339,6 +352,17 @@ class MainController extends Controller
             ->get();
 
         return response()->json($tarifs, 200);
+    }
+
+    public function getTarifsTypeClasse($type_classe_id)
+    {
+        $tarifs = DB::table('tarifs')
+            ->join('type_classes', 'tarifs.type_classe_id', '=', 'type_classes.id')
+            ->select('tarifs.*', 'type_classes.classe as classe')
+            ->where('tarifs.type_classe_id', $type_classe_id)
+            ->get();
+
+        return response()->json($tarifs[0], 200);
     }
 
     public function addTarif(Request $req)

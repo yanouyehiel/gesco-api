@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 class CreateRolesTable extends Migration
 {
@@ -17,6 +18,13 @@ class CreateRolesTable extends Migration
             $table->id();
             $table->string('intitule');
         });
+
+        // Insertion des rôles après la création de la table
+        DB::table('roles')->insert([
+            ['intitule' => 'Administrateur'],
+            ['intitule' => 'Enseignant'],
+            ['intitule' => 'Parent'],
+        ]);
     }
 
     /**

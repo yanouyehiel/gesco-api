@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -14,9 +15,15 @@ return new class extends Migration
         Schema::create('cycles', function (Blueprint $table) {
             $table->id();
             $table->string('intitule');
-            $table->foreignId('ecole_id')->constrained('ecoles');
+            $table->foreignId('ecole_id')->constrained('ecoles')->nullable();
             $table->timestamps();
         });
+
+        // Insertion des cycles après la création de la table
+        DB::table('cycles')->insert([
+            ['intitule' => 'Premier Cycle'],
+            ['intitule' => 'Second Cycle']
+        ]);
     }
 
     /**

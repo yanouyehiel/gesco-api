@@ -47,8 +47,9 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::get('/get-name-school/{id}', [ParentController::class, 'getNameEcole']);
     Route::get('/get-roles', [MainController::class, 'roles']);
     Route::get('/get-role/{id}', [MainController::class, 'getRole']);
-    Route::get('/get-types-classe', [MainController::class, 'getTypesClasse']);
+    Route::get('/get-types-classe/{id}', [MainController::class, 'getTypesClasse']);
     Route::get('/get-type-classe/{id}', [MainController::class, 'getTypeClasse']);
+    Route::get('/get-classes-university/{id}', [MainController::class, 'getClassesUniversity']); //Lister toutes les classes d'une université
     Route::get('/get-classes-school/{id}', [MainController::class, 'getClassesSchool']); //Lister toutes les classes d'une ecole
     Route::get('/get-info-classe/{id}', [MainController::class, 'getInfoClasse']); //
     Route::get('/get-personnel/{id}', [MainController::class, 'getEmployesOfSchool']); //Liste de tous les employes d'une ecole
@@ -66,6 +67,7 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::get('/get-parents/{id}', [MainController::class, 'getParents']); //Lister tous les parents d'élèves d'une école
     Route::get('/get-parent/{id}', [MainController::class, 'getParent']);
     Route::get('/get-tarifs/{id}', [MainController::class, 'getTarifs']); //Lister le coût des pensions de toutes les classes d'un établissement
+    Route::get('/get-tarif/type-classe/{id}', [MainController::class, 'getTarifsTypeClasse']); //Lister le coût des pensions de toutes les classes d'un établissement
     Route::get('/get-paiements/{id}', [MainController::class, 'getPaiements']); //Lister tous les paiements de pension
     Route::get('/get-paiements-chart/{id}', [MainController::class, 'getPaiementsChart']);
     Route::get('/get-fees-student/{student}', [MainController::class, 'getFeesStudent']); //Lister tous les paiements d'un eleve

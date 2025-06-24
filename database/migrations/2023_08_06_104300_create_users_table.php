@@ -21,11 +21,11 @@ class CreateUsersTable extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('telephone');
+            $table->string('telephone')->unique();
             $table->foreignId('role_id')->constrained('roles')->nullable();
             $table->foreignId('ecole_id')->constrained('ecoles')->nullable();
-            //$table->foreignId('classe_id')->constrained('classes')->default(null);
-            //$table->foreignId('student_id')->constrained('students')->default(null);
+            $table->foreignId('classe_id')->nullable()->constrained('classes');
+            $table->foreignId('student_id')->nullable()->constrained('students');
             $table->rememberToken();
             $table->timestamps();
         });
