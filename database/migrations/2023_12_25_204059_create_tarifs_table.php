@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('premiere_tranche')->default(0);
             $table->integer('deuxieme_tranche')->default(0);
             $table->integer('troisieme_tranche')->default(0);
+            $table->string('annee_scolaire');
             $table->timestamps();
         });
     }

@@ -385,6 +385,7 @@ class MainController extends Controller
                 $tarif->premiere_tranche = (int) $req->premiere_tranche;
                 $tarif->deuxieme_tranche = (int) $req->deuxieme_tranche;
                 $tarif->troisieme_tranche = (int) $req->troisieme_tranche;
+                $tarif->annee_scolaire = (int) $req->annee_scolaire;
                 $tarif->ecole_id = (int) $req->ecole_id;
                 $tarif->created_at = now();
                 $tarif->updated_at = now();

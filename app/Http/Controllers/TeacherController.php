@@ -209,9 +209,10 @@ class  TeacherController extends Controller
             'matiere_id' => 'required|integer',
             'note' => 'required',
             'classe_id' => 'required|integer',
-            'sequence' => 'required|integer',
+            'sequence_id' => 'required|integer',
             'ecole_id' => 'required|integer',
-            'appreciation' => 'required'
+            'appreciation' => 'required',
+            'annee_scolaire' => 'required',
         ]);
 
         $note = new Note();
@@ -222,7 +223,7 @@ class  TeacherController extends Controller
         $note->classe_id = $request->classe_id;
         $note->ecole_id = $request->ecole_id;
         $note->appreciation = $request->appreciation;
-        $note->annee_scolaire = "2024-2025";
+        $note->annee_scolaire = $request->annee_scolaire;
         $note->save();
 
         return response()->json([
@@ -259,7 +260,8 @@ class  TeacherController extends Controller
             'periode' => 'required',
             'student_id' => 'required',
             'ecole_id' => 'required',
-            'classe_id' => 'required'
+            'classe_id' => 'required',
+            'annee_scolaire' => 'required',
         ]);
 
         $absence = new Absence();
@@ -267,9 +269,9 @@ class  TeacherController extends Controller
         $absence->periode = $request->periode;
         $absence->ecole_id = (int) $request->ecole_id;
         $absence->classe_id = (int) $request->classe_id;
-        $absence->annee_scolaire = "2024-2025";
+        $absence->annee_scolaire = $request->annee_scolaire;
         $absence->updated_at = now();
-        $absence->created_at = $request->date;
+        $absence->created_at = now();
         $absence->save();
 
         return response()->json([
