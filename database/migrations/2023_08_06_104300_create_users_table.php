@@ -26,6 +26,7 @@ class CreateUsersTable extends Migration
             $table->foreignId('ecole_id')->constrained('ecoles')->nullable();
             $table->foreignId('classe_id')->nullable()->constrained('classes');
             $table->foreignId('student_id')->nullable()->constrained('students');
+            $table->string('token_expo')->nullable()->default(null);
             $table->rememberToken();
             $table->timestamps();
         });

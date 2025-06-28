@@ -117,4 +117,27 @@ class AuthController extends Controller
         }
         
     }
+
+    public function createTokenExpo(Request $request) {
+        $request->validate([
+            'user_id' => 'required|integer',
+            'token' => 'required|string'
+        ]);
+
+        if ($request->user()->id != $request->user_id) {
+            return response()->json([
+                'message' => 'Ce User ID ne vous appartient pas'
+            ], 403);
+        }
+
+        $user = User::find($request->user_id);
+
+        if ($user) {
+            $user->token_expo = $request->token;
+            $user->save();
+            return response()->json([
+                'message' => "Token expo enregistré avec succès"
+            ]);
+        }
+    }
 }

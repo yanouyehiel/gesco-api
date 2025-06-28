@@ -12,6 +12,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\LogoutController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\VerifyEmailController;
 use App\Http\Controllers\UniversityController;
@@ -124,6 +125,9 @@ Route::middleware(['auth:sanctum', CheckEcole::class, AddCustomHeaders::class])-
     Route::post('/filieres/add', [UniversityController::class, 'createFiliere']);
     Route::post('/notes/add', [UniversityController::class, 'saveNote']);
     Route::post('/type-classe/add', [UniversityController::class, 'createTypeClasse']);
+    Route::post('/users/token-expo', [AuthController::class, 'createTokenExpo']);
+    Route::post('/notification/send', [NotificationController::class, 'sendNotification']);
+    Route::get('/notification/user', [NotificationController::class, 'getNotificationsUser']);
 
 
     //Update Routes
